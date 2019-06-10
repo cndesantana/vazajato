@@ -45,6 +45,26 @@ png("totalRetweets_VazaJato.png",width=3200,height=1800,res=300)
 print(p2)
 dev.off()
 
+
+df_vaza <- df_tweets %>% filter(term == "#VazaJato") %>% group_by(term, screenName) %>% summarise(tot = sum(retweetCount)) %>% arrange(tot) %>% tail(30)
+df_moro <- df_tweets %>% filter(term == "Moro") %>% group_by(term, screenName) %>% summarise(tot = sum(retweetCount)) %>% arrange(tot) %>% tail(30)
+df_dala <- df_tweets %>% filter(term == "Dallagnol") %>% group_by(term, screenName) %>% summarise(tot = sum(retweetCount)) %>% arrange(tot) %>% tail(30)
+df_inter <- df_tweets %>% filter(term == "Intercept") %>% group_by(term, screenName) %>% summarise(tot = sum(retweetCount)) %>% arrange(tot) %>% tail(30)
+
+df <- rbind(df_vaza, df_moro, df_dala, df_inter)
+
+p3 <- df %>% 
+	group_by(term, screenName, tot) %>% 
+	ggplot(aes(x = reorder(screenName,tot), y = tot, fill = term)) + 
+	geom_bar(stat = "identity") + coord_flip() + facet_grid(~term) + 
+	ylab("Usuários do Twitter") + xlab("Número de retweets")
+
+png("influenciadores_VazaJato.png",width=3200,height=1800,res=300)
+print(p3)
+dev.off()
+
+
+
 #####3 
 ### 
 badlocations <- c("","Brasil",
