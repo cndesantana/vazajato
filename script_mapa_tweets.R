@@ -17,13 +17,12 @@ library(lubridate)
 load("df_tweets_10000_vazajato.Rdat")
 
 p1 <- df_tweets %>% 
-  mutate(data = ymd_hms(created)) %>% 
-  group_by(data,term) %>%
-  summarise(tot=n()) %>%
-  ggplot(aes(x=data, tot, col =term)) + 
-  geom_line(stat="identity") + 
+  mutate(data = lubridate::round_date(created, "minute")) %>% 
+  count(data, term) %>% 
+  ggplot(aes(data, n)) +
+  geom_line() +
   xlab("Horário (H:M:SS)") + 
-  ylab("Tweets por segundo") + 
+  ylab("Tweets por minuto") + 
   ggtitle("Tweets contendo hashtags relacionadas ao #VazaJato (10.06.19)")+
   facet_wrap(~term)
 
@@ -56,8 +55,19 @@ df <- rbind(df_vaza, df_moro, df_dala, df_inter)
 p3 <- df %>% 
 	group_by(term, screenName, tot) %>% 
 	ggplot(aes(x = reorder(screenName,tot), y = tot, fill = term)) + 
-	geom_bar(stat = "identity") + coord_flip() + facet_grid(~term) + 
+	geom_bar(stat = "identity", show.legend = FALSE) + coord_flip() + facet_wrap(~term, ncol = 2, scales = "free") + 
 	ylab("Usuários do Twitter") + xlab("Número de retweets")
+
+p3 <- df %>%
+  mutate(word = factor(screenName, levels = rev(unique(screenName)))) %>%
+  group_by(term) %>% arrange(desc(tot)) %>%
+  top_n(20) %>% ungroup() %>%
+  ggplot(aes(x = reorder(word, tot), y = tot, fill = term)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(x = reorder(word, tot), y = tot, label = paste0(tot%/%1000,"k") ),hjust = 0, size=2.8 )+
+  facet_wrap(~term, ncol = 2, scales = "free") +
+  coord_flip()+
+  xlab("Usuários") + ylab("Retweets")
 
 png("influenciadores_VazaJato.png",width=3200,height=1800,res=300)
 print(p3)
