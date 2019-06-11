@@ -1,6 +1,6 @@
 # Carregando dados
 
-load("df_tweets_10000_vazajato.Rdat")
+load("ThousandMiles.RData")
 
 # Carregando Librarys: 
 
@@ -80,7 +80,7 @@ word_vectors <- pmi_pca$x
 
 rownames(word_vectors) <- rownames(pmi_matrix)
 
-# save(word_vectors, file = "word_vectors.RData") # para shiny
+save(word_vectors, file = "word_vectors.RData") # para shiny
 
 # Encontrando similaridades: 
 
