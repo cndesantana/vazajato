@@ -26,7 +26,9 @@ unigram_probs <- df_tweets %>%
   anti_join(stop_words, by= c("word" = "value")) %>% 
   filter(!word %in% c("rt", "é", "vagas", "disponíveis", "286", 
                       "adéli", "@makavelijones", "cristiane",
-                      "=gt")) %>% 
+                      "=gt", "1", "2018", "sérgio", "mecan", 
+                      "3ª", "oi", "1406", "al", "el", "deyem",
+                      "bey", "2", "100620019", "conv", "6")) %>% 
   count(word, sort = TRUE) %>%
   mutate(p = n / sum(n)) %>% 
   filter(str_detect(word, "@") == FALSE) %>% 
@@ -40,7 +42,10 @@ tidy_skipgrams <- df_tweets %>%
   tidytext::unnest_tokens(word, text, token = "tweets") %>%
   anti_join(stop_words, by= c("word" = "value")) %>% 
   filter(!word %in% c("rt", "é", "vagas", "disponíveis", "286", 
-                      "adéli", "@makavelijones", "cristiane", "=gt")) %>% 
+                      "adéli", "@makavelijones", "cristiane",
+                      "=gt", "1", "2018", "sérgio", "mecan", 
+                      "3ª", "oi", "1406", "al", "el", "deyem",
+                      "bey", "2", "10062019", "conv", "6")) %>% 
   filter(str_detect(word, "@") == FALSE) %>% 
   filter(str_detect(word, "https")== FALSE) %>% 
   mutate(ngramID = id) %>% 
@@ -80,7 +85,7 @@ word_vectors <- pmi_pca$x
 
 rownames(word_vectors) <- rownames(pmi_matrix)
 
-save(word_vectors, file = "word_vectors.RData") # para shiny
+# save(word_vectors, file = "word_vectors.RData") # para shiny
 
 # Encontrando similaridades: 
 
