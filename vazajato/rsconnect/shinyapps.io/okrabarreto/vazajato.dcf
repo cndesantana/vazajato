@@ -1,0 +1,12 @@
+name: vazajato
+title: vazajato
+username:
+account: okrabarreto
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 975246
+bundleId: 2144174
+url: https://okrabarreto.shinyapps.io/vazajato/
+when: 1560217510.04489
+asMultiple: FALSE
+asStatic: FALSE

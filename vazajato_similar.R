@@ -80,6 +80,8 @@ word_vectors <- pmi_pca$x
 
 rownames(word_vectors) <- rownames(pmi_matrix)
 
+# save(word_vectors, file = "word_vectors.RData") # para shiny
+
 # Encontrando similaridades: 
 
 search_synonyms <- function(word_vectors, selected_vector) {
@@ -95,6 +97,8 @@ search_synonyms <- function(word_vectors, selected_vector) {
 }
 
 # Similaridades a Moro
+
+
 
 p1 <- search_synonyms(word_vectors, word_vectors["moro",]) %>% 
   top_n(20, abs(similarity)) %>% 
