@@ -5,8 +5,8 @@ account: okrabarreto
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 975246
-bundleId: 2145131
+bundleId: 2145502
 url: https://okrabarreto.shinyapps.io/vazajato/
-when: 1560253768.23092
+when: 1560262174.853
 asMultiple: FALSE
 asStatic: FALSE
