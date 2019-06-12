@@ -1,0 +1,263 @@
+---
+title: "Indo além do PCA, v2"
+author: "Tarssio Barreto"
+date: "21 de abril de 2019"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+<div style="text-align: justify">
+
+
+## Pacotes que foram utilizados: 
+
+```{r warning = FALSE, message = FALSE}
+
+
+#install.packages("pacman")
+library(pacman)
+
+
+p_load(caret, tidyverse, factoextra, epubr, tm, lexiconPT, broom, tidytext, widyr, irlba, 
+       Rtsne,plotly)
+
+require(forcats)
+
+``` 
+
+
+## Pré-requisitos básicos: 
+
+### Carregando nossos dados:
+
+```{r warning = FALSE, message = FALSE}
+
+load("ThousandMiles.RData")
+
+``` 
+### Determinando nossas Stopwords: 
+
+```{r warning = FALSE, message = FALSE}
+
+stop_words <- stopwords(kind = "pt") %>% 
+  as.tibble()
+
+``` 
+
+## Nosso Índice
+
+O índice utilizado ele é representado pela divisão da probabilidade das duas palavras em questão estarem no mesmo twitter dividido pela probabilidade individual de cada uma destas palavras estarem presentes no total dos textos.
+
+$$ ptogether = \frac{p}{p1*p2} $$
+Depois, reduziremos a quantidade de variáveis utilizando PCA e retornaremos 256 componentes príncipais. Desta forma, também mitigamos o efeito provocado pela correlação entre as palavras.
+
+Por fim, reprojetaremos estas variáveis (utilizando os 256 PC´s) e para cada uma das palavras desejadas retornaremos aquelas que tem maior similidaridade. Similaridade, esta, que é uma transformação do index, dado os 256 componentes principais.
+
+### Determinando a probabilidade individual:
+
+Contamos então todas as palavras contidas nos twitters e retornamos a probabilidade individual desta, dada a totalidade dos nossos objetos de análise.
+
+```{r warning = FALSE, message = FALSE}
+
+unigram_probs <- df_tweets %>%
+  tidytext::unnest_tokens(word, text, token = "tweets") %>% 
+  anti_join(stop_words, by= c("word" = "value")) %>% 
+  filter(!word %in% c("rt", "é", "vagas", "disponíveis", "286", 
+                      "adéli", "@makavelijones", "cristiane",
+                      "=gt", "1", "2018", "sérgio", "mecan", 
+                      "3ª", "oi", "1406", "al", "el", "deyem",
+                      "bey", "2", "100620019", "conv", "6")) %>% 
+  count(word, sort = TRUE) %>%
+  mutate(p = n / sum(n)) %>% 
+  filter(str_detect(word, "@") == FALSE) %>% 
+  filter(str_detect(word, "https")== FALSE)
+
+head(unigram_probs)
+
+``` 
+
+### Determinando a probabilidade de duas palavras aparecerem juntas no mesmo tt:
+
+Nesta etapa usaremos a função `pairwise` que retorna quantas vezes cada dupla de palavra apareceu juntas no mesmo objeto de análise: 
+
+```{r warning = FALSE, message = FALSE}
+
+skipgram_probs <- df_tweets %>%
+  tidytext::unnest_tokens(word, text, token = "tweets") %>%
+  anti_join(stop_words, by= c("word" = "value")) %>% 
+  filter(!word %in% c("rt", "é", "vagas", "disponíveis", "286", 
+                      "adéli", "@makavelijones", "cristiane",
+                      "=gt", "1", "2018", "sérgio", "mecan", 
+                      "3ª", "oi", "1406", "al", "el", "deyem",
+                      "bey", "2", "10062019", "conv", "6")) %>% 
+  filter(str_detect(word, "@") == FALSE) %>% 
+  filter(str_detect(word, "https")== FALSE) %>% 
+  mutate(ngramID = id) %>% 
+  unite(skipgramID, ngramID) %>% 
+  widyr::pairwise_count(word, skipgramID, diag = TRUE, sort = TRUE) %>%
+  dplyr::mutate(p = n / sum(n))
+
+```
+
+### Determinando nosso index:
+
+Faremos então, o passo final, onde juntaremos as probabilidades inerentes a cada uma das parcelas e achararemos nosso `p_together` que é o indicador proposto acima
+
+```{r warning = FALSE, message = FALSE}
+
+index_prob <- skipgram_probs %>%
+  dplyr::filter(n > 20) %>%
+  dplyr::rename(word1 = item1, word2 = item2) %>%
+  dplyr::left_join(unigram_probs %>%
+                     select(word1 = word, p1 = p),
+                   by = "word1") %>%
+  dplyr::left_join(unigram_probs %>%
+                     select(word2 = word, p2 = p),
+                   by = "word2") %>%
+  dplyr::mutate(p_together = p / p1 / p2)
+
+
+head(index_prob)
+
+```
+
+## PCA
+
+Realizaremos o PCA dos nossos dados afim de reduzir a correlação entre as variáveis. Neste processo, transformaremos, primeiro, nossos dados em uma matriz esparsa e depois realizaremos o PCA de forma a ganhar processamento:
+
+```{r warning = FALSE, message = FALSE}
+
+pmi_matrix <- index_prob %>%
+  dplyr::mutate(pmi = log10(p_together)) %>%
+  tidytext::cast_sparse(word1, word2, pmi)
+
+pmi_pca <- irlba::prcomp_irlba(pmi_matrix, n = 256)
+
+word_vectors <- pmi_pca$x
+
+rownames(word_vectors) <- rownames(pmi_matrix)
+
+```
+
+Usaremos, também, uma função `copiada` da Jesse para retornar os valores preditos para 256 PC´s. Esta função retorna as palavras mais similares a escolhida.
+
+```{r warning = FALSE, message = FALSE}
+
+search_synonyms <- function(word_vectors, selected_vector) {
+  
+  similarities <- word_vectors %*% selected_vector %>%
+    tidy() %>%
+    as_tibble() %>%
+    rename(token = .rownames,
+           similarity = unrowname.x.)
+  
+  similarities %>%
+    arrange(-similarity)    
+}
+
+
+```
+
+## Criando gráficos: 
+
+### Gráfico das tags escolhidas: 
+
+```{r warning = FALSE, message = FALSE}
+
+p1 <- search_synonyms(word_vectors, word_vectors["moro",]) %>% 
+  top_n(20, abs(similarity)) %>% 
+  ggplot(aes(x = reorder(token, similarity), y = similarity, 
+             fill = similarity)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank()) +
+  labs(title = "Palavras Ligadas a Moro")
+
+p2 <- search_synonyms(word_vectors, word_vectors["dallagnol",]) %>% 
+  top_n(20, abs(similarity)) %>% 
+  ggplot(aes(x = reorder(token, similarity), y = similarity, 
+             fill = similarity)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank()) +
+  labs(title = "Palavras Ligadas a Dallagnol")
+
+p3 <- search_synonyms(word_vectors, word_vectors["#vazajato",]) %>% 
+  top_n(20, abs(similarity)) %>% 
+  ggplot(aes(x = reorder(token, similarity), y = similarity, 
+             fill = similarity)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank()) +
+  labs(title = "Palavras Ligadas a #vazajato")
+
+p4 <- search_synonyms(word_vectors, word_vectors["intercept",]) %>% 
+  top_n(20, abs(similarity)) %>% 
+  ggplot(aes(x = reorder(token, similarity), y = similarity, 
+             fill = similarity)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank()) +
+  labs(title = "Palavras Ligadas a Intercept")
+
+
+gridExtra::grid.arrange(p1,p2,p3,p4)
+
+```
+
+### Gráfico ligadas as eleições: 
+
+
+```{r warning = FALSE, message = FALSE}
+
+p5 <- search_synonyms(word_vectors, word_vectors["lula",]) %>% 
+  top_n(20, abs(similarity)) %>% 
+  ggplot(aes(x = reorder(token, similarity), y = similarity, 
+             fill = similarity)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank()) +
+  labs(title = "Palavras Ligadas a Lula")
+
+p6 <- search_synonyms(word_vectors, word_vectors["bolsonaro",]) %>% 
+  top_n(20, abs(similarity)) %>% 
+  ggplot(aes(x = reorder(token, similarity), y = similarity, 
+             fill = similarity)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank()) +
+  labs(title = "Palavras Ligadas a Bolsonaro")
+
+p7 <- search_synonyms(word_vectors, word_vectors["haddad",]) %>% 
+  top_n(20, abs(similarity)) %>% 
+  ggplot(aes(x = reorder(token, similarity), y = similarity, 
+             fill = similarity)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank()) +
+  labs(title = "Palavras Ligadas a Haddad")
+
+p8 <- search_synonyms(word_vectors, word_vectors["eleição",]) %>% 
+  top_n(20, abs(similarity)) %>% 
+  ggplot(aes(x = reorder(token, similarity), y = similarity, 
+             fill = similarity)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.x = element_blank()) +
+  labs(title = "Palavras Ligadas a Eleição")
+
+
+gridExtra::grid.arrange(p5, p6, p7, p8)
+
+
+```
