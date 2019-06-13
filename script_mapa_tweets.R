@@ -20,8 +20,8 @@ p1 <- df_tweets %>%
   ggplot(aes(data, n)) +
   geom_line() +
   xlab("Horário (H:M:SS)") + 
-  ylab("Tweets por minuto") + 
-  ggtitle("Tweets contendo hashtags relacionadas ao #VazaJato (10.06.19)")+
+  ylab("Número de tuítes por minuto") + 
+  ggtitle("Número de tuítes contendo hashtags relacionadas ao #VazaJato (10.06.19)")+
   facet_wrap(~term)
 
 png("TweetsPerMinute_VazaJato.png",width=3200,height=1800,res=300)
@@ -29,15 +29,15 @@ print(p1)
 dev.off()
 
 
-p2 <- df_tweets %>% 
+p2 <- df_tweets %>%
   group_by(term) %>%
   summarise(tot=sum(retweetCount)) %>%
   ggplot(aes(x=reorder(term,tot), tot, fill =term)) + 
   geom_text(aes(x=reorder(term,tot), y = tot, label = paste0(signif(tot/1000000,2)," Millions") ),vjust = -0.5, size=2.8)+
   geom_bar(stat="identity") + 
   xlab("Termos") + 
-  ylab("Retweets") + 
-  ggtitle("Número de retweets contendo hashtags relacionadas ao #VazaJato (10.06.19)")
+  ylab("Número de retuítes") + 
+  ggtitle("Número de retuítes contendo hashtags relacionadas ao #VazaJato (10.06.19)")
 
 png("totalRetweets_VazaJato.png",width=3200,height=1800,res=300)
 print(p2)
@@ -50,7 +50,7 @@ df_inter <- df_tweets %>% filter(term == "Intercept") %>% group_by(term, screenN
 
 df <- rbind(df_vaza, df_moro, df_dala, df_inter)
 df <- df %>%
-  mutate(word = factor(screenName, levels = rev(unique(screenName)))) %>%
+  mutate(screenName = factor(screenName, levels = rev(unique(df$screenName)))) %>%
   ungroup() %>%   # As a precaution / handle in a separate .grouped_df method
   arrange(term, tot) %>%   # arrange by facet variables and continuous values
   mutate(.r = row_number()) # Add a row number variable
@@ -60,14 +60,14 @@ p3 <- df %>%
   geom_col(show.legend=FALSE) +
   geom_text(aes(x = .r, y = tot, label = paste0(tot%/%1000,"k") ),vjust = 0, hjust = 0, size=2.8)+
   coord_flip() +
-  facet_wrap(~ term, scales = "free") +  # Should free scales (though could be left to user)
   scale_x_continuous(  # This handles replacement of .r for x
     breaks = df$.r,     # notice need to reuse data frame
-    labels = df$word
+    labels = df$screenName
   ) +
-  theme(axis.text.x = element_text(size=10),
-          axis.text.y = element_text(size=10))+
-  xlab("Usuários") + ylab("Retweets")
+  theme(axis.text.x = element_text(size=8),
+          axis.text.y = element_text(size=8))+
+  xlab("Usuários") + ylab("Número de Retuítes") +
+  facet_wrap(~ term, scales = "free")  # Should free scales at x-axis(though could be left to user)
 
 
 png("influenciadores_VazaJato.png",width=3200,height=1800,res=300)
