@@ -11,6 +11,7 @@ library(widyr)
 
 #dataframe com texto e classe
 
+load("data/df_tweets_10000_vazajato.Rdat")
 texto_df <- dplyr::data_frame(classe = df_tweets$term,texto =df_tweets$text)
 
 analise_tweets <- texto_df %>%
@@ -51,7 +52,7 @@ word_cors <- analise_twitter_secoes %>%
 
 set.seed(2016)
 
-word_cors %>%
+p1 <- word_cors %>%
   filter(correlation > .65) %>%
   graph_from_data_frame() %>%
   ggraph(layout = "fr") +
@@ -60,6 +61,8 @@ word_cors %>%
   geom_node_text(aes(label = name), repel = TRUE) +
   theme_void()
 
-
+png("figures/redes_de_palavras.png", width = 3200, height = 1800, res = 300)
+print(p1)
+dev.off()
 
   

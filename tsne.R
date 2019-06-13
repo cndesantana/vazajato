@@ -1,6 +1,6 @@
 # Carregando dados
 
-load("df_tweets_10000_vazajato.Rdat")
+load("data/df_tweets_10000_vazajato.Rdat")
 
 # Carregando Librarys: 
 

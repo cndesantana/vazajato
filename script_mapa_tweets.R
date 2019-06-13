@@ -10,7 +10,7 @@ library(ggplot2)
 library(lubridate)
 
 #carregar os data.frames contendo os tweets
-load("df_tweets_10000_vazajato.Rdat")
+load("data/df_tweets_10000_vazajato.Rdat")
 #load("ThousandMiles.RData")
 #load("Thousandlies.RData")
 
@@ -24,7 +24,7 @@ p1 <- df_tweets %>%
   ggtitle("Número de tuítes contendo hashtags relacionadas ao #VazaJato (10.06.19)")+
   facet_wrap(~term)
 
-png("TweetsPerMinute_VazaJato.png",width=3200,height=1800,res=300)
+png("figures/TweetsPerMinute_VazaJato.png",width=3200,height=1800,res=300)
 print(p1)
 dev.off()
 
@@ -39,7 +39,7 @@ p2 <- df_tweets %>%
   ylab("Número de retuítes") + 
   ggtitle("Número de retuítes contendo hashtags relacionadas ao #VazaJato (10.06.19)")
 
-png("totalRetweets_VazaJato.png",width=3200,height=1800,res=300)
+png("figures/totalRetweets_VazaJato.png",width=3200,height=1800,res=300)
 print(p2)
 dev.off()
 
@@ -70,7 +70,7 @@ p3 <- df %>%
   facet_wrap(~ term, scales = "free")  # Should free scales at x-axis(though could be left to user)
 
 
-png("influenciadores_VazaJato.png",width=3200,height=1800,res=300)
+png("figures/influenciadores_VazaJato.png",width=3200,height=1800,res=300)
 print(p3)
 dev.off()
 

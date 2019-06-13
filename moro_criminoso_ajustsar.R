@@ -1,6 +1,6 @@
 # Carregando dados
 
-load("Thousandlies.RData")
+load("data/Thousandlies.RData")
 
 # Carregando Librarys: 
 
