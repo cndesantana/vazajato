@@ -24,11 +24,7 @@ api_key = "XXXXXXXXXXXXXXX"
 api_secret = "YYYYYYYYYYYYYYYYYYYYYYYYYY"
 access_token = "XYXYXYXYXYXYXXYXYXYXYXYYXYX"
 access_token_secret = "ZZZZZZZZZZZZZZZZZZZZZZZZ"
-   api_key = "3I8JehozX8N4Bojg0qSdmDFLX"
-   api_secret = "QBg2E2TcqtvlK0vrRIwIWZGSXjlPoYaLXwjrePRDLztepAU6cg"
-   access_token = "2433072234-seryr8c6OCyNU5veonMKf5hvX8JKCUOiA20TcoC"
-   access_token_secret = "rHOyUzdhL5GN6lqWh3LOxmuKD2hb0IvpeJm4hrs24O4nx"
- 
+
 setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 
 args = commandArgs(trailingOnly=TRUE)
