@@ -3,6 +3,8 @@ library(shinydashboard)
 library(tidyverse)
 library(tidytext)
 library(lexiconPT)
+library(igraph)
+library(threejs)
 
 options(scipen = 9999)
 
@@ -23,6 +25,39 @@ sent2cat <- function(valor) {
   resp
 }
 
+tratar_rede <- function(grafo_, size = 0.2, arrow_width = 1, 
+                        paleta = "Set1") {
+  centralidade <- centr_degree(grafo_, "in")$res
+  tamanhos <- floor((centralidade[centralidade != 0]) ^ (1/3))
+  nomes_grupos <- vertex_attr(grafo_, "name", V(grafo_)[centralidade != 0])
+  
+  comunidades <- igraph::clusters(grafo_)
+  n_comun <- length(unique(comunidades$membership))
+  
+  if (n_comun == 1) {
+    comunidades <- grafo_ %>% 
+      igraph::as_data_frame() %>% 
+      select(from, to) %>% 
+      graph_from_data_frame(FALSE) %>% 
+      igraph::cluster_louvain()
+    n_comun <- length(unique(comunidades$membership))
+  }
+  
+  if (n_comun > 9) {
+    cores <- colors()[seq(30, 600, length.out = n_comun)]
+  } else {
+    cores <- RColorBrewer::brewer.pal(n_comun, paleta)
+  }
+  
+  vertex_attr(grafo_, "size") <- size
+  vertex_attr(grafo_, "color") <- cores[comunidades$membership]
+  vertex_attr(grafo_, "label") <- ""
+  vertex_attr(grafo_, "size",  V(grafo_)[centralidade != 0]) <- tamanhos
+  vertex_attr(grafo_, "label",  V(grafo_)[centralidade != 0]) <- nomes_grupos
+  edge_attr(grafo_, "arrow.width") <- arrow_width
+  grafo_
+}
+
 tuites <- dir("data/", full.names = TRUE) %>% 
   str_subset("usuarios", TRUE) %>% 
   map_df(ler_tuites) %>% 
@@ -31,15 +66,27 @@ tuites <- dir("data/", full.names = TRUE) %>%
 
 tidy_tuites <- tuites %>% 
   unnest_tokens(word, text) %>% 
+  filter(! word %in% c(get_stopwords("pt")$word, 
+                       "t.co", "https", "é", "rt", 
+                       "ser", "pra", "sobre", "1")) %>% 
   left_join(lexiconPT::oplexicon_v3.0, by = c("word" = "term"))
+
+rede <- ler_tuites("data/tweets_dos_usuarios.RData") %>% 
+  select(screen_name, mentions_screen_name) %>% 
+  unnest(mentions_screen_name) %>% 
+  filter(!is.na(mentions_screen_name))
+  
+grafo <- rede %>% 
+  graph_from_data_frame() %>% 
+  tratar_rede()
 
 ui <- dashboardPage(
   dashboardHeader(),
   dashboardSidebar(
     sidebarMenu(
       menuItem("Panorama geral", tabName = "geral", icon = icon("dashboard")),
-      menuItem("Rede dos twites", tabName = "rede", icon = icon("twitter")),
-      menuItem("Conteúdo dos twites", tabName = "texto", icon = icon("envelope-open"))
+      menuItem("Rede dos usuários", tabName = "rede", icon = icon("twitter")),
+      menuItem("Conteúdo dos tuítes", tabName = "texto", icon = icon("envelope-open"))
     )
   ),
   dashboardBody(
@@ -48,17 +95,21 @@ ui <- dashboardPage(
         tabName = "geral",
         fluidRow(
           box(
+            title = "Evolução do uso das hashtags", 
             plotOutput("graf_evo_tuites")
           ),
           box(
+            title = "Evolução do sentimento dos tuítes", 
             plotOutput("graf_evo_sentimento")
           )
         ),
         fluidRow(
           box(
+            title = "Quantidade de mensagens retuitadas, por termo de busca",
             plotOutput("graf_retuites")
           ),
           box(
+            title = "Quantidade de mensagens retuitadas, por termo de usuário",
             plotOutput("graf_pessoas")
           )
         )
@@ -67,7 +118,8 @@ ui <- dashboardPage(
         tabName = "rede",
         fluidRow(
           box(
-            width = 12, plotOutput("graf_rede_relacoes")
+            width = 12, title = "Rede de menções de perfis (interativa)",
+            scatterplotThreeOutput("graf_rede_relacoes")
           )
         )
       ),
@@ -75,10 +127,12 @@ ui <- dashboardPage(
         tabName = "texto",
         fluidRow(
           box(
-            width = 6, plotOutput("graf_rede_texto")
+            width = 6, title = "Rede relacionamento entre as palavras",
+            plotOutput("graf_rede_texto")
           ),
           box(
-            width = 6, plotOutput("graf_cont_texto")
+            width = 6, title = "Palavras mais usadas",
+            plotOutput("graf_cont_texto")
           )
         )
       )
@@ -139,9 +193,8 @@ server <- function(input, output) {
       coord_flip() 
   })
   
-  output$graf_rede_relacoes <- renderPlot({
-    plot(1, 1, "n")
-    text(1, 1, "Rede de relacionamentos")
+  output$graf_rede_relacoes <- renderScatterplotThree({
+    threejs::graphjs(grafo)
   })
   
   output$graf_rede_texto <- renderPlot({
@@ -150,8 +203,14 @@ server <- function(input, output) {
   })
   
   output$graf_cont_texto <- renderPlot({
-    plot(1, 1, "n")
-    text(1, 1, "Contagem de palavras")
+    tidy_tuites %>% 
+      count(term, word, sort = TRUE) %>% 
+      # group_by(term) %>% 
+      top_n(15) %>% 
+      mutate(word = fct_reorder(word, n)) %>% 
+      ggplot(aes(word, n, fill = term)) +
+      geom_col() +
+      coord_flip()
   })
   
 }
