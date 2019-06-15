@@ -16,12 +16,18 @@ ler_tuites <- function(path) {
     as_tibble()
 }
 
+sent2cat <- function(valor) {
+  resp <- rep("neutro", length(valor))
+  resp[valor < 0] <- "negativo"
+  resp[valor > 0] <- "positivos"
+  resp
+}
+
 tuites <- dir("data/", full.names = TRUE) %>% 
   str_subset("usuarios", TRUE) %>% 
   map_df(ler_tuites) %>% 
-  distinct()
-
-data("oplexicon_v3.0")
+  distinct() %>% 
+  mutate(data = lubridate::round_date(created, "10 minutes"))
 
 tidy_tuites <- tuites %>% 
   unnest_tokens(word, text) %>% 
@@ -83,7 +89,6 @@ ui <- dashboardPage(
 server <- function(input, output) {
   output$graf_evo_tuites <- renderPlot({
     tuites %>% 
-      mutate(data = lubridate::round_date(created, "minute")) %>% 
       count(term, data) %>% 
       ggplot(aes(data, n, col = term)) +
       geom_line() +
@@ -93,11 +98,13 @@ server <- function(input, output) {
   
   output$graf_evo_sentimento <- renderPlot({
     tidy_tuites %>% 
-      mutate(data = lubridate::round_date(created, "minute")) %>% 
-      group_by(term, data) %>% 
+      group_by(term, id, data) %>% 
       summarise(sentimento = sum(polarity, na.rm = TRUE)) %>% 
-      ggplot(aes(data, sentimento, col = term)) +
-      geom_line() +
+      ungroup() %>% 
+      mutate(sentimento = sent2cat(sentimento)) %>% 
+      count(term, data, sentimento) %>% 
+      ggplot(aes(data, n, col = sentimento)) +
+      geom_line(alpha = 0.6) +
       theme(legend.position = "top",  legend.direction = "horizontal", 
             legend.title = element_blank())
   })
