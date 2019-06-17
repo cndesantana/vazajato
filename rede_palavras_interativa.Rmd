@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Redes de palavras #VazaJato"
 output: 
   flexdashboard::flex_dashboard:
     social: menu
@@ -22,7 +22,7 @@ library(ggraph)
 
 Inputs {.sidebar data-width=200}
 -----------------------------------------------------------------------
-Abaixo você controla o tipo de gráfico, o tamanho das letras e o nivel de correlação entre as palavras. Quanto menor o nível de correlação mais palavras serão exibidas
+Abaixo você controla o tipo de gráfico, o tamanho das letras, a contagem mínima de ocorrência de palavra, o termo para fazer o filtro e o nivel de correlação entre as palavras. Quanto menor o nível de correlação mais palavras serão exibidas
 
 ```{r}
 
@@ -32,7 +32,7 @@ Abaixo você controla o tipo de gráfico, o tamanho das letras e o nivel de corr
 #dataframe com texto e classe
 load("data/word_cors.RData")
 
-termos<- analise_twitter_secoes$classe
+termos<- unique(analise_twitter_secoes$classe)
 
 radioButtons("tipo_layout",
              "Tipo de layout",
@@ -44,8 +44,10 @@ radioButtons("tipo_layout",
 numericInput("tam_fonte", "Tamanho da fonte", value=3,
 min=1, max=5, step=1, width = 80)
 sliderInput("correlacao", "Correlação Mínima", min=0.5, max = 1, value = 0.65, step = 0.05)
-selectInput("termo","Termo",choices = termos,multiple = TRUE)
-selectInput("palavrasSel","Palavras",choices = word_cors$item1,multiple = TRUE)
+selectInput("termo","Termo",choices = termos,multiple = TRUE, selected = termos[1])
+numericInput("cont_palavras","Contagem mínimoa de palavras",value=50,
+min=20, max=100, step=1, width = 80)
+#selectInput("palavrasSel","Palavras",choices = word_cors$item1,multiple = TRUE)
 
 
 ```
@@ -55,7 +57,6 @@ Column
 
 
 ### Gráfico da rede
-Com o botão esquerdo do mouse pressionado, marque as palavras de um verso e depois solte o botão do mouse. Ao lado veja lista para a música abaixo dos anúncios. 
 
 
 ```{r}
@@ -71,11 +72,11 @@ library(widyr)
 output$word_graph<-renderPlot({
   
   words_trabalho <- analise_twitter_secoes %>%
-    filter(section == input$termo)
+    filter(classe %in% input$termo)
   
-  words_trabalho %>%
+  words_trabalho<- words_trabalho %>%
   group_by(word) %>%
-  filter(n() >= 100) %>%
+  filter(n() >= input$cont_palavras) %>%
   pairwise_cor(word, section, sort = TRUE)
   
   set.seed(2016)
@@ -125,38 +126,3 @@ selecao<- observeEvent(input$plot_brush,{
 ```
 
 
-Column {data-width=300}
------------------------------------------------------------------------
-
-
-### Tweets
-
-```{r}
-# renderUI({
-#   
-#   if (is.null(input$palavrasSel)){
-#     search_pal<- "https://www.vagalume.com.br/search?q=chico buarque"
-#     #search_pal<- "https://www.youtube.com/results?search_query=chico+buarque"
-#     tags$iframe(src = search_pal, height="100%", width="100%")
-#   } else {
-#     search_pal <- 'chico buarque'
-#     for (palavra in input$palavrasSel){
-#       
-#       #search_pal <- paste0(search_pal,'+',palavra)
-#       search_pal <- paste0(search_pal,' ',palavra)
-#       print(search_pal)
-#     }
-#     
-#     #search_pal<- paste0("https://www.youtube.com/results?search_query=",search_pal)
-#     search_pal<- paste0("https://www.vagalume.com.br/search?q=",search_pal)
-#     print(search_pal)
-#     
-#     tags$iframe(src = search_pal, height="100%", width="100%")
-#     
-#   }
-#   
-# })
-
-
-
-```

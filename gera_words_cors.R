@@ -45,11 +45,12 @@ analise_twitter_secoes <- dplyr::data_frame(classe = df_tweets$termo,texto =df_t
   unnest_tokens(word, texto) %>%
   filter(!word %in% stop_words_pcasp)
 
+save(list=c("analise_twitter_secoes"),  file="data/word_cors.RData")
 
 # we need to filter for at least relatively common words first
 word_cors <- analise_twitter_secoes %>%
   group_by(word) %>%
-  filter(n() >= 100) %>%
+  filter(n() >= 20) %>%
   pairwise_cor(word, section, sort = TRUE)
 
 
