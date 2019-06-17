@@ -100,7 +100,7 @@ coefs <- model$glmnet.fit %>%
 
 #Plot MEDIUM
 
-coefs %>%
+p1 <- coefs %>%
   group_by(estimate > 0) %>%
   top_n(20, abs(estimate)) %>%
   ungroup() %>%
@@ -112,8 +112,11 @@ coefs %>%
   labs(y = "Estimativa", x = "Termos")
   
   
-ggsave("coef_termos.jpg")  
-  
+# png("moro_coef.png", width=3200, height=1800, res = 300)
+# print(p1)
+# dev.off()
+
+
 # testando
 
 coefs %>% 
