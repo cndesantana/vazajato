@@ -1,0 +1,128 @@
+---
+title: "Redes de palavras #VazaJato"
+output: 
+  flexdashboard::flex_dashboard:
+    social: menu
+    source_code: embed
+runtime: shiny    
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(dplyr)
+library(tidytext)
+library(tidyr)
+library(widyr)
+library(shiny)
+library(igraph)
+library(ggraph)
+
+
+```
+
+Inputs {.sidebar data-width=200}
+-----------------------------------------------------------------------
+Abaixo você controla o tipo de gráfico, o tamanho das letras, a contagem mínima de ocorrência de palavra, o termo para fazer o filtro e o nivel de correlação entre as palavras. Quanto menor o nível de correlação mais palavras serão exibidas
+
+```{r}
+
+
+
+
+#dataframe com texto e classe
+load("data/word_cors.RData")
+
+termos<- unique(analise_twitter_secoes$classe)
+
+radioButtons("tipo_layout",
+             "Tipo de layout",
+             choices = c("graphopt"= "graphopt",                                                                      "mds"= "mds",
+                         "drl"="drl",
+                         "kk" ="kk",
+                         "fr"="fr"),
+             selected = "graphopt")
+numericInput("tam_fonte", "Tamanho da fonte", value=3,
+min=1, max=5, step=1, width = 80)
+sliderInput("correlacao", "Correlação Mínima", min=0.5, max = 1, value = 0.65, step = 0.05)
+selectInput("termo","Termo",choices = termos,multiple = TRUE, selected = termos[1])
+numericInput("cont_palavras","Contagem mínimoa de palavras",value=50,
+min=20, max=100, step=1, width = 80)
+#selectInput("palavrasSel","Palavras",choices = word_cors$item1,multiple = TRUE)
+
+
+```
+
+Column 
+-----------------------------------------------------------------------
+
+
+### Gráfico da rede
+
+
+```{r}
+library(dplyr)
+library(tidytext)
+library(tidyr)
+library(scales)
+library(ggplot2)
+library(igraph)
+library(ggraph)
+library(widyr)
+
+output$word_graph<-renderPlot({
+  
+  words_trabalho <- analise_twitter_secoes %>%
+    filter(classe %in% input$termo)
+  
+  words_trabalho<- words_trabalho %>%
+  group_by(word) %>%
+  filter(n() >= input$cont_palavras) %>%
+  pairwise_cor(word, section, sort = TRUE)
+  
+  set.seed(2016)
+  
+  #graphopt, mds, kk, drl e fr como opções
+  grafico_pal<<-words_trabalho %>%
+    filter(correlation > input$correlacao) %>%
+    graph_from_data_frame() %>%
+    ggraph(layout = input$tipo_layout) +
+    geom_edge_link(aes(edge_alpha = correlation), show.legend = FALSE) +
+    geom_node_point(color = "lightblue", size = input$tam_fonte) +
+    geom_node_text(aes(label = name), repel = TRUE,size=input$tam_fonte, color="red") +
+    theme_void()
+  
+  grafico_pal
+})
+
+
+plotOutput('word_graph',brush = brushOpts(id="plot_brush", resetOnNew = TRUE))
+
+selecao<- observeEvent(input$plot_brush,{
+  
+  val<- input$plot_brush
+  
+  if (!is.null(val)){
+    vetor_x_palavras <- which(grafico_pal$data$x>= val$xmin & grafico_pal$data$x<= val$xmax) 
+    vetor_y_palavras <- which(grafico_pal$data$y>= val$ymin & grafico_pal$data$y<= val$ymax)
+    
+    
+    
+    vetor_palavras <- vetor_x_palavras[which(vetor_x_palavras %in% vetor_y_palavras)] 
+    
+    
+    palavras <- grafico_pal$data$name[vetor_palavras]
+    
+    print(paste0("Palavras",palavras))
+    updateSelectInput(session,"palavrasSel",selected = palavras)
+
+    
+  } 
+  
+  
+})
+
+
+
+```
+
+
