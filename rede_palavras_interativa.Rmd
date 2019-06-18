@@ -32,21 +32,25 @@ Abaixo você controla o tipo de gráfico, o tamanho das letras, a contagem míni
 #dataframe com texto e classe
 load("data/word_cors.RData")
 
-termos<- unique(analise_twitter_secoes$classe)
+termos<<- unique(analise_twitter_secoes$classe)
 
 radioButtons("tipo_layout",
              "Tipo de layout",
              choices = c("graphopt"= "graphopt",                                                                      "mds"= "mds",
-                         "drl"="drl",
-                         "kk" ="kk",
+                        "kk" ="kk",
                          "fr"="fr"),
              selected = "graphopt")
+
 numericInput("tam_fonte", "Tamanho da fonte", value=3,
 min=1, max=5, step=1, width = 80)
+
 sliderInput("correlacao", "Correlação Mínima", min=0.5, max = 1, value = 0.65, step = 0.05)
+
 selectInput("termo","Termo",choices = termos,multiple = TRUE, selected = termos[1])
-numericInput("cont_palavras","Contagem mínimoa de palavras",value=50,
-min=20, max=100, step=1, width = 80)
+
+sliderInput("cont_palavras","Contagem mínimoa de palavras",value=50,
+min=20, max=100, step=5)
+
 #selectInput("palavrasSel","Palavras",choices = word_cors$item1,multiple = TRUE)
 
 
@@ -71,8 +75,10 @@ library(widyr)
 
 output$word_graph<-renderPlot({
   
+  termo_sel <- ifelse(is.null(input$termo),termos[1],input$termo)
+  
   words_trabalho <- analise_twitter_secoes %>%
-    filter(classe %in% input$termo)
+    filter(classe %in% termo_sel)
   
   words_trabalho<- words_trabalho %>%
   group_by(word) %>%

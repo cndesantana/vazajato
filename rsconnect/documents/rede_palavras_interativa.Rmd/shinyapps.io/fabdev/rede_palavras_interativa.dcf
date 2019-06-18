@@ -5,8 +5,8 @@ account: fabdev
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 984349
-bundleId: 2158620
+bundleId: 2160428
 url: https://fabdev.shinyapps.io/rede_palavras_interativa/
-when: 1560773067.6029
+when: 1560823904.28436
 asMultiple: FALSE
 asStatic: FALSE
