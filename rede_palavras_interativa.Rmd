@@ -18,19 +18,21 @@ library(igraph)
 library(ggraph)
 
 
+#dataframe com texto e classe
+load("data/word_cors.RData")
+load("data/df_texto_url.RData")
+
 ```
 
-Inputs {.sidebar data-width=200}
------------------------------------------------------------------------
+Sidebar {.sidebar}
+=====================================
+
 Abaixo você controla o tipo de gráfico, o tamanho das letras, a contagem mínima de ocorrência de palavra, o termo para fazer o filtro e o nivel de correlação entre as palavras. Quanto menor o nível de correlação mais palavras serão exibidas
 
 ```{r}
 
 
 
-
-#dataframe com texto e classe
-load("data/word_cors.RData")
 
 termos<<- unique(analise_twitter_secoes$classe)
 
@@ -51,16 +53,24 @@ selectInput("termo","Termo",choices = termos,multiple = TRUE, selected = termos[
 sliderInput("cont_palavras","Contagem mínimoa de palavras",value=50,
 min=20, max=100, step=5)
 
-#selectInput("palavrasSel","Palavras",choices = word_cors$item1,multiple = TRUE)
+selectInput("palavrasSel","Palavras",choices = NULL,multiple = TRUE)
 
 
 ```
+
+
+Rede de Palavras 
+=====================================
+
+
+
 
 Column 
 -----------------------------------------------------------------------
 
 
 ### Gráfico da rede
+Com o botão pressionado, arraste o mouse sobre as palavras que formam uma sub-rede. Libere o mouse e você verá do lado direito uma tabela com todas as referências de tuítes ligadas ä sub-rede selecionada. Se você não fizer a seleção a tabela irá mostrar as dez primeiras referências de tuítes sobre a Vaza Jato.
 
 
 ```{r}
@@ -72,6 +82,7 @@ library(ggplot2)
 library(igraph)
 library(ggraph)
 library(widyr)
+library(stringr)
 
 output$word_graph<-renderPlot({
   
@@ -119,11 +130,26 @@ selecao<- observeEvent(input$plot_brush,{
     palavras <- grafico_pal$data$name[vetor_palavras]
     
     print(paste0("Palavras",palavras))
-    updateSelectInput(session,"palavrasSel",selected = palavras)
+    updateSelectInput(session,"palavrasSel",choices= palavras, selected = palavras)
+    
+    # texto<- df_texto_url$text
+    # 
+    # palavra_sel<- palavras
+    # 
+    # regex_pal<<-"^"
+    # 
+    # map_chr(palavra_sel, function(palavra){
+    #   regex_pal<<- paste0(regex_pal,"(?=.*\\b",palavra,"\\b)")
+    #  }
+    # )
+    # 
+    # regex_pal <- paste0(regex_pal,".*$" )
+    # pos<- str_which(texto, regex_pal)
+    # 
+    # df_table <<- df_texto_url[pos,]
 
     
   } 
-  
   
 })
 
@@ -131,4 +157,135 @@ selecao<- observeEvent(input$plot_brush,{
 
 ```
 
+Column {data-width=300}
+-----------------------------------------------------------------------
 
+
+### Tabela com os tuítes referenciados
+
+```{r}
+library(DT)
+library(purrr)
+
+renderDataTable({
+  
+  if (is.null(input$palavrasSel)){
+    df_table<- df_texto_url%>%
+      top_n(10) 
+
+  } else{
+    
+    texto<- df_texto_url$text
+    
+    palavra_sel<- input$palavrasSel
+    
+    regex_pal<<-"^"
+    
+    map_chr(palavra_sel, function(palavra){
+      regex_pal<<- paste0(regex_pal,"(?=.*\\b",palavra,"\\b)")
+     }
+    )
+    
+    regex_pal <- paste0(regex_pal,".*$" )
+    pos<- str_which(texto, regex_pal)
+    
+    df_table <- df_texto_url[pos,]
+  }  
+  
+
+  df_table %>%
+    select(text) %>%
+     DT::datatable(colnames = c("Texto"),
+                   fillContainer = TRUE,
+                   selection = "none",
+                   extensions = "Buttons", 
+                   rownames = FALSE, 
+                   options = list(
+                    pageLength = NROW(df_table),
+                    dom = 'Bfrtip',
+                    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                   ))
+    
+})
+
+
+```
+
+Analítico 
+=====================================
+
+### Detalhamento dos tuítes
+
+```{r}
+
+renderDataTable({
+  
+  print("analítico")
+  print(input$palavrasSel)
+  
+  if (is.null(input$palavrasSel)){
+    print(names(df_texto_url))
+    df_analitico<- df_texto_url%>%
+      select(text,description, status_url)%>% 
+      top_n(10) 
+    
+    print(NROW(df_analitico))
+    
+
+  } else{
+    
+    print(names(df_texto_url))
+    
+    texto<- df_texto_url$text
+    
+    palavra_sel<- input$palavrasSel
+    
+    regex_pal_analitico<<-"^"
+    
+    map_chr(palavra_sel, function(palavra){
+      regex_pal_analitico<<- paste0(regex_pal_analitico,"(?=.*\\b",palavra,"\\b)")
+     }
+    )
+    
+    regex_pal_analitico <- paste0(regex_pal_analitico,".*$" )
+    pos<- str_which(texto, regex_pal_analitico)
+    
+    df_analitico<- df_texto_url[pos,]
+    
+    print(NROW(df_analitico))
+  }  
+  
+  # createLink <- function(val) {
+  #     sprintf(paste0("<a href='", URLdecode(val),"' target='_blank'>", val ,"</a>"))}
+  #   
+  #   
+  # df_analitico$status_url <- HTML(createLink(df_analitico$status_url))
+
+  df_analitico %>%
+    select(text,description, status_url)%>% 
+     DT::datatable(colnames = c("Texto","Descricao","URL"),
+                   fillContainer = TRUE,
+                   selection = "none",
+                   extensions = "Buttons", 
+                   rownames = FALSE, 
+                   options = list(
+                    pageLength = NROW(df_analitico),
+                    dom = 'Bfrtip',
+                    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+                   ))
+    
+})
+
+
+# renderDataTable({
+#   df_table%>%
+#     select(text,description, status_url)%>% 
+#     DT::datatable(colnames = c("Conta", "Título da conta", "Função"), fillContainer = TRUE,extensions = "Buttons", rownames = FALSE, options = list(
+#     pageLength = NROW(df_table), 
+#     dom = 'Bfrtip',
+#     buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+#   ) )
+  
+#})
+
+```

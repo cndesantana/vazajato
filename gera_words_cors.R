@@ -13,6 +13,7 @@ load("data/todas_hashtags_repetindo.RData")
 
 df_tweets<- df_todas
 
+names(df_todas)
 
 rm("df_todas")
 texto_df <- dplyr::data_frame(classe = df_tweets$termo,texto =df_tweets$text)
@@ -67,4 +68,34 @@ word_cors %>%
   geom_node_text(aes(label = name), repel = TRUE) +
   theme_void()
 
+
+  
+  df_texto_url <- df_todas%>%
+    select(text, status_url, description) %>%
+    mutate(text = str_to_lower(text))
+  
+  
+  save(list = "df_texto_url", file = "data/df_texto_url.RData")
+  
+  df_texto_url %>%
+    str_subset(text,"^(?=.*\\bmoro\\b)(?=.*\\bdescuido\\b)(?=.*\\bdedinho\\b).*$")
+  
+  
+  str_subset(texto,"^(?=.*\\bmoro\\b)(?=.*\\bdescuido\\b)(?=.*\\bdedinho\\b).*$")
+  
+  str_detect(string=df_todas$text, pattern = "tacla", negate = TRUE)
+
+  
+  select(text)
+  
+  str_detect(text, "tacla")
+
+
+
+  select(distinct(text))
+  
+  group_by(select(distinct(text)))%>%
+  summarise(
+    n()
+  )
 
