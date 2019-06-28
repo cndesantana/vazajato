@@ -6,9 +6,9 @@ Scripts e dados usados para produzir análises do post publicado no Medium: http
 ## Plano de trabalho
 
 - [x] Publicar artigo inicial
-- [ ] Reorganizar arquivos do projeto
-- [ ] Construir Lavínia
+- [x] Reorganizar arquivos do projeto
+- [x] Construir Lavínia
 - [ ] Construir painel de monitoramento da treta
 - [ ] Publicar artigo sobre dois momentos da VazaJato
-- [ ] Automatizar rotina de download dos dados
+- [x] Automatizar rotina de download dos dados
 
