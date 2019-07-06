@@ -9,7 +9,9 @@ library(igraph)
 library(ggraph)
 
 
-load("data/todas_hashtags_repetindo.RData")
+load("~/GitHub/vazajato/data/todas_hashtags_repetindo.RData")
+
+
 
 df_tweets<- df_todas
 
@@ -35,7 +37,7 @@ analise_tweets <- analise_tweets %>%
 
 
 
-stop_words_pcasp <- unique(c(unique(analise_tweets$palavra[analise_tweets$idf==0]), stopwords::stopwords("pt")))
+stop_words_twitter <- unique(c(unique(analise_tweets$palavra[analise_tweets$idf==0]), stopwords::stopwords("pt")))
 
 termos<- unique(df_tweets$termo)
 
@@ -44,9 +46,9 @@ analise_twitter_secoes <- dplyr::data_frame(classe = df_tweets$termo,texto =df_t
   mutate(section = row_number() %/% 10) %>%
   filter(section > 0) %>%
   unnest_tokens(word, texto) %>%
-  filter(!word %in% stop_words_pcasp)
+  filter(!word %in% stop_words_twitter)
 
-save(list=c("analise_twitter_secoes"),  file="data/word_cors.RData")
+save(list=c("analise_twitter_secoes"),  file="~/GitHub/vazajato/data/word_cors.RData")
 
 # we need to filter for at least relatively common words first
 word_cors <- analise_twitter_secoes %>%
@@ -69,32 +71,32 @@ word_cors %>%
   theme_void()
 
 
-  
-  df_texto_url <- df_todas%>%
-    select(text, status_url, description) %>%
-    mutate(text = str_to_lower(text))
-  
-  
-  save(list = "df_texto_url", file = "data/df_texto_url.RData")
-  
-  df_texto_url %>%
-    str_subset(text,"^(?=.*\\bmoro\\b)(?=.*\\bdescuido\\b)(?=.*\\bdedinho\\b).*$")
-  
-  
-  str_subset(texto,"^(?=.*\\bmoro\\b)(?=.*\\bdescuido\\b)(?=.*\\bdedinho\\b).*$")
-  
-  str_detect(string=df_todas$text, pattern = "tacla", negate = TRUE)
 
-  
-  select(text)
-  
-  str_detect(text, "tacla")
+df_texto_url <- df_tweets%>%
+  select(text, status_url, description) %>%
+  mutate(text = str_to_lower(text))
 
 
+save(list = "df_texto_url", file = "~/GitHub/vazajato/data/df_texto_url.RData")
 
-  select(distinct(text))
-  
-  group_by(select(distinct(text)))%>%
+df_texto_url %>%
+  str_subset(text,"^(?=.*\\bmoro\\b)(?=.*\\bdescuido\\b)(?=.*\\bdedinho\\b).*$")
+
+
+str_subset(texto,"^(?=.*\\bmoro\\b)(?=.*\\bdescuido\\b)(?=.*\\bdedinho\\b).*$")
+
+str_detect(string=df_todas$text, pattern = "tacla", negate = TRUE)
+
+
+select(text)
+
+str_detect(text, "tacla")
+
+
+
+select(distinct(text))
+
+group_by(select(distinct(text)))%>%
   summarise(
     n()
   )
