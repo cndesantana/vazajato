@@ -17,8 +17,8 @@ library(shiny)
 library(igraph)
 library(ggraph)
 #dataframe com texto e classe
-load("~/GitHub/vazajato/data/word_cors.RData")
-load("~/GitHub/vazajato/data/df_texto_url.RData")
+load("data/word_cors.RData")
+load("data/df_texto_url.RData")
 ```
 
 Sidebar {.sidebar}
@@ -152,6 +152,8 @@ renderDataTable({
     
     texto<- df_texto_url$text
     
+    texto<- str_replace_all(texto, "[\r\n]" , " ")
+    
     palavra_sel<- input$palavrasSel
     
     regex_pal<<-"^"
@@ -162,6 +164,7 @@ renderDataTable({
     )
     
     regex_pal <- paste0(regex_pal,".*$" )
+    print(regex_pal)
     pos<- str_which(texto, regex_pal)
     
     df_table <- df_texto_url[pos,]
@@ -197,7 +200,7 @@ renderDataTable({
   if (is.null(input$palavrasSel)){
     print(names(df_texto_url))
     df_analitico<- df_texto_url%>%
-      select(text,description, status_url)%>% 
+      select(user_id,text,description, status_url)%>% 
       top_n(10) 
     
     print(NROW(df_analitico))
@@ -207,6 +210,8 @@ renderDataTable({
     print(names(df_texto_url))
     
     texto<- df_texto_url$text
+    
+    texto<- str_replace_all(texto, "[\r\n]" , " ")
     
     palavra_sel<- input$palavrasSel
     
@@ -218,6 +223,7 @@ renderDataTable({
     )
     
     regex_pal_analitico <- paste0(regex_pal_analitico,".*$" )
+    print(regex_pal_analitico)
     pos<- str_which(texto, regex_pal_analitico)
     
     df_analitico<- df_texto_url[pos,]
@@ -241,7 +247,7 @@ renderDataTable({
   #   
   # df_analitico$status_url <- HTML(createLink(df_analitico$status_url))
   df_analitico %>%
-    select(text,description, status_url)%>% 
+    select(user_id,text,description, status_url)%>% 
      DT::datatable(colnames = c("Texto","Descricao","URL"),
                    fillContainer = TRUE,
                    selection = "none",
