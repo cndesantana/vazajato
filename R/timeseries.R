@@ -6,7 +6,7 @@ library(tidytext)
 setwd("/home/charles/GitRepos/vazajato/vazajato/datavazajato/")
 
 getTidyGDP <- function(tweets){
-  tweets <- tweets %>% filter(created_at >= ymd_hms("2019-06-25 17:00:00"))
+  tweets <- tweets %>% filter(created_at >= ymd_hms("2019-06-09 00:00:00"))
   tweets$created_at <- floor_date(tweets$created_at,"30 minutes")
   tweets <- tweets %>% arrange(created_at)
   unique_created_at <- unique(tweets$created_at)
@@ -126,7 +126,7 @@ paste_into_sentence <- function(a, b){
 #}
 #saveRDS(tweets, file = "subset_tweets_Lula_0907.rds")
 
-files<- system("ls tweets_Moro_201906[3]*.rds",intern=TRUE)
+files<- system("ls tweets_Moro_20190*.rds",intern=TRUE)
 tweets <- data.frame()
 #files <- files[-c(1:11,144)]
 for(f in files){
@@ -139,7 +139,7 @@ for(f in files){
 }
 saveRDS(tweets, file = "subset_tweets_Moro_0907.rds")
 
-files<- system("ls tweets_#VazaJato_201906[3]*.rds",intern=TRUE)
+files<- system("ls tweets_#VazaJato_20190*.rds",intern=TRUE)
 tweets <- data.frame()
 for(f in files){
   cat(f,sep="\n")
