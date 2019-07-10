@@ -36,13 +36,13 @@ point_time <- function(df, n_word, inicio, fim, prop){
 		    "VAZAJATO")
 
  df_hash <- df %>% 
-	  unnest(hashtags) %>% 
-	  filter(!is.na(hashtags)) %>%
-	  mutate(hashtags = toupper(hashtags)) %>%
-	  filter(hashtags %in% top20hashtags) %>%  
 	  mutate(date = floor_date(created_at, "hour")) %>%
 	  filter(date >= inicio) %>% 
-	  filter(date <= fim) %>% 
+	  filter(date <= fim) %>%
+	  filter(!is.na(hashtags)) %>%
+	  unnest(hashtags) %>% 
+	  mutate(hashtags = toupper(hashtags)) %>%
+	  filter(hashtags %in% top20hashtags) %>%  
 	  group_by(date, hashtags) %>% 
 	  summarise(n = n()) %>% top_n(n_word,n) %>%  
 	  arrange(date)
