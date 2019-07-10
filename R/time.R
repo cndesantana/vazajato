@@ -82,5 +82,5 @@ args = commandArgs(trailingOnly=TRUE)
 prop <- as.numeric(args[1])
 df <- readRDS("datavazajato/todashashtagspraarea.rds")
 randpos <- sample(1:nrow(df),round(0.1*nrow(df)), replace=FALSE)
-df <- df[randpos,]
+df <- df[randpos,c(1,2)]
 point_time(df, n_word = 5, inicio = min(df$created_at), fim = max(df$created_at), prop)
