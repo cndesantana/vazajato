@@ -2,12 +2,12 @@
 title: "Redes de palavras #VazaJato"
 output: 
   flexdashboard::flex_dashboard:
-    social: menu
-    source_code: embed
-runtime: shiny    
+    orientation: columns
+    vertical_layout: fill
 ---
-
+  
 ```{r setup, include=FALSE}
+
 library(flexdashboard)
 library(dplyr)
 library(tidytext)
@@ -18,15 +18,16 @@ library(igraph)
 library(ggraph)
 
 
+
 #dataframe com texto e classe
-load("data/word_cors.RData")
-load("data/df_texto_url.RData")
+load("~/GitHub/vazajato/data/word_cors.RData")
+load("~/GitHub/vazajato/data/df_texto_url.RData")
 
 ```
 
 Sidebar {.sidebar}
 =====================================
-
+  
 Abaixo você controla o tipo de gráfico, o tamanho das letras, a contagem mínima de ocorrência de palavra, o termo para fazer o filtro e o nivel de correlação entre as palavras. Quanto menor o nível de correlação mais palavras serão exibidas
 
 ```{r}
@@ -39,19 +40,19 @@ termos<<- unique(analise_twitter_secoes$classe)
 radioButtons("tipo_layout",
              "Tipo de layout",
              choices = c("graphopt"= "graphopt",                                                                      "mds"= "mds",
-                        "kk" ="kk",
+                         "kk" ="kk",
                          "fr"="fr"),
              selected = "graphopt")
 
 numericInput("tam_fonte", "Tamanho da fonte", value=3,
-min=1, max=5, step=1, width = 80)
+             min=1, max=5, step=1, width = 80)
 
 sliderInput("correlacao", "Correlação Mínima", min=0.5, max = 1, value = 0.65, step = 0.05)
 
 selectInput("termo","Termo",choices = termos,multiple = TRUE, selected = termos[1])
 
 sliderInput("cont_palavras","Contagem mínimoa de palavras",value=50,
-min=20, max=100, step=5)
+            min=20, max=100, step=5)
 
 selectInput("palavrasSel","Palavras",choices = NULL,multiple = TRUE)
 
@@ -61,14 +62,14 @@ selectInput("palavrasSel","Palavras",choices = NULL,multiple = TRUE)
 
 Rede de Palavras 
 =====================================
-
-
-
-
-Column 
+  
+  
+  
+  
+  Column 
 -----------------------------------------------------------------------
-
-
+  
+  
 ### Gráfico da rede
 Com o botão pressionado, arraste o mouse sobre as palavras que formam uma sub-rede. Libere o mouse e você verá do lado direito uma tabela com todas as referências de tuítes ligadas ä sub-rede selecionada. Se você não fizer a seleção a tabela irá mostrar as dez primeiras referências de tuítes sobre a Vaza Jato.
 
@@ -92,9 +93,9 @@ output$word_graph<-renderPlot({
     filter(classe %in% termo_sel)
   
   words_trabalho<- words_trabalho %>%
-  group_by(word) %>%
-  filter(n() >= input$cont_palavras) %>%
-  pairwise_cor(word, section, sort = TRUE)
+    group_by(word) %>%
+    filter(n() >= input$cont_palavras) %>%
+    pairwise_cor(word, section, sort = TRUE)
   
   set.seed(2016)
   
@@ -147,7 +148,7 @@ selecao<- observeEvent(input$plot_brush,{
     # pos<- str_which(texto, regex_pal)
     # 
     # df_table <<- df_texto_url[pos,]
-
+    
     
   } 
   
@@ -159,8 +160,8 @@ selecao<- observeEvent(input$plot_brush,{
 
 Column {data-width=300}
 -----------------------------------------------------------------------
-
-
+  
+  
 ### Tabela com os tuítes referenciados
 
 ```{r}
@@ -172,7 +173,7 @@ renderDataTable({
   if (is.null(input$palavrasSel)){
     df_table<- df_texto_url%>%
       top_n(10) 
-
+    
   } else{
     
     texto<- df_texto_url$text
@@ -183,7 +184,7 @@ renderDataTable({
     
     map_chr(palavra_sel, function(palavra){
       regex_pal<<- paste0(regex_pal,"(?=.*\\b",palavra,"\\b)")
-     }
+    }
     )
     
     regex_pal <- paste0(regex_pal,".*$" )
@@ -192,20 +193,20 @@ renderDataTable({
     df_table <- df_texto_url[pos,]
   }  
   
-
+  
   df_table %>%
     select(text) %>%
-     DT::datatable(colnames = c("Texto"),
-                   fillContainer = TRUE,
-                   selection = "none",
-                   extensions = "Buttons", 
-                   rownames = FALSE, 
-                   options = list(
+    DT::datatable(colnames = c("Texto"),
+                  fillContainer = TRUE,
+                  selection = "none",
+                  extensions = "Buttons", 
+                  rownames = FALSE, 
+                  options = list(
                     pageLength = NROW(df_table),
                     dom = 'Bfrtip',
                     buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
-                   ))
-    
+                  ))
+  
 })
 
 
@@ -213,9 +214,9 @@ renderDataTable({
 
 Analítico 
 =====================================
-
+  
 ### Detalhamento dos tuítes
-
+  
 ```{r}
 
 renderDataTable({
@@ -231,7 +232,7 @@ renderDataTable({
     
     print(NROW(df_analitico))
     
-
+    
   } else{
     
     print(names(df_texto_url))
@@ -244,7 +245,7 @@ renderDataTable({
     
     map_chr(palavra_sel, function(palavra){
       regex_pal_analitico<<- paste0(regex_pal_analitico,"(?=.*\\b",palavra,"\\b)")
-     }
+    }
     )
     
     regex_pal_analitico <- paste0(regex_pal_analitico,".*$" )
@@ -256,24 +257,24 @@ renderDataTable({
   }  
   
   # createLink <- function(val) {
-  #     sprintf(paste0("<a href='", URLdecode(val),"' target='_blank'>", val ,"</a>"))}
+  #     sprintf(paste0("", val ,""))}
   #   
   #   
   # df_analitico$status_url <- HTML(createLink(df_analitico$status_url))
-
+  
   df_analitico %>%
     select(text,description, status_url)%>% 
-     DT::datatable(colnames = c("Texto","Descricao","URL"),
-                   fillContainer = TRUE,
-                   selection = "none",
-                   extensions = "Buttons", 
-                   rownames = FALSE, 
-                   options = list(
+    DT::datatable(colnames = c("Texto","Descricao","URL"),
+                  fillContainer = TRUE,
+                  selection = "none",
+                  extensions = "Buttons", 
+                  rownames = FALSE, 
+                  options = list(
                     pageLength = NROW(df_analitico),
                     dom = 'Bfrtip',
                     buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
-                   ))
-    
+                  ))
+  
 })
 
 
@@ -285,7 +286,7 @@ renderDataTable({
 #     dom = 'Bfrtip',
 #     buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
 #   ) )
-  
+
 #})
 
 ```
