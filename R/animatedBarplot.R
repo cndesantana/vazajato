@@ -37,8 +37,8 @@ getTidyGDP <- function(tweets){
 
 fromTwitterToHashtagAnimation <- function(tweets, output = "gif"){
    tweets_tidy <- getTidyGDP(tweets)
-   tweets_tidy <- tweets_tidy %>% filter(year >= ymd_hms("2019-06-19 10:00:00"))
-   tweets_tidy <- tweets_tidy %>% filter(year <= ymd_hms("2019-06-19 20:00:00"))
+   tweets_tidy <- tweets_tidy %>% filter(year >= ymd_hms("2019-06-30 00:00:00"))
+   tweets_tidy <- tweets_tidy %>% filter(year <= ymd_hms("2019-06-30 23:59:00"))
 
    animateTidyWords(tweets_tidy, output, filename = "animation_hashtag",mysubtitle = "Top 10 Hashtags em tuítes contendo termo 'Moro'", mycaption = "Dadoscope - https://medium.com/dadoscope")
 } 
@@ -90,7 +90,7 @@ animateTidyWords <- function(tweets_tidy, output = "gif", filename = "animation"
 		 plot.margin = margin(2,2, 2, 10, "cm"))
    anim = staticplot + transition_states(year, transition_length = 4, state_length = 1) +
    view_follow(fixed_x = FALSE)  +
-   labs(title = 'Moro no Senado {closest_state}',
+   labs(title = 'Manifestações pró-Moro {closest_state}',
         subtitle  =  mysubtitle,
         caption  = mycaption)
 
@@ -114,14 +114,15 @@ paste_into_sentence <- function(a, b){
 
 #to test
 #files <- c("tweets_Moro_201906191010.rds", "tweets_Moro_201906191110.rds", "tweets_Moro_201906191210.rds", "tweets_Moro_201906191230.rds","tweets_Moro_201906191250.rds","tweets_Moro_201906191310.rds","tweets_Moro_201906191330.rds","tweets_Moro_201906191350.rds","tweets_Moro_201906191410.rds","tweets_Moro_201906191430.rds","tweets_Moro_201906191450.rds","tweets_Moro_201906191510.rds","tweets_Moro_201906191530.rds","tweets_Moro_201906191550.rds","tweets_Moro_201906191730.rds","tweets_Moro_201906192110.rds")
-files<-system("ls tweets_Moro*.rds",intern=TRUE)
-tweets <- data.frame()
+#files<-system("ls tweets_Moro*.rds",intern=TRUE)
+#tweets <- data.frame()
 #files <- files[-c(1:11,144)]
-for(f in files){
-  cat(f,sep="\n")
-  aux <- readRDS(f)
-  if(ncol(aux) >= 90){
-    tweets <- rbind(tweets, aux[,1:90])
-  }
-}
-fromTwitterToHashtagAnimation(tweets)
+#for(f in files){
+#  cat(f,sep="\n")
+#  aux <- readRDS(f)
+#  if(ncol(aux) >= 90){
+#    tweets <- rbind(tweets, aux[,1:90])
+#  }
+#}
+#fromTwitterToHashtagAnimation(tweets)
+fromTwitterToHashtagAnimation(df)
