@@ -20,10 +20,10 @@ library(readxl)
 library(httr)
 library(twitteR)
 
-api_key = "iY1RjU0xu7Ym3zT5fipT26Nx6"
-api_secret = "F9f6pjDKmMEGv4bpHp1NY84DspZrUiboXZ5SVUYZ93orHdh2iu"
-access_token = "1000032762064199680-0z6tbJp5LvSjv7WFzdCeS34iuW9AtK"
-access_token_secret = "1mA6vTNP3qWKiC1dHoUBXBdFBVLS8ybksbkiSiNtey3OP"
+api_key = "XXX"
+api_secret = "XX"
+access_token = "XX-XX"
+access_token_secret = "XXXXX"
 
 setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 
