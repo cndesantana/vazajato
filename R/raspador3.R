@@ -12,10 +12,10 @@ termos <- c("#VazaJato","Moro","Senado")
 
 token <- create_token(
    app = "my_twitter_research_app",
-   consumer_key = "3I8JehozX8N4Bojg0qSdmDFLX",
-   consumer_secret = "QBg2E2TcqtvlK0vrRIwIWZGSXjlPoYaLXwjrePRDLztepAU6cg",
-   access_token = "2433072234-seryr8c6OCyNU5veonMKf5hvX8JKCUOiA20TcoC",
-   access_secret = "rHOyUzdhL5GN6lqWh3LOxmuKD2hb0IvpeJm4hrs24O4nx"
+   consumer_key = "XX",
+   consumer_secret = "XXX",
+   access_token = "XX-XX",
+   access_secret = "XX"
 )   
 
 for(termo in termos){
